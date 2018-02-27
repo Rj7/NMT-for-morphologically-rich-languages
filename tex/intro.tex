@@ -1,0 +1,16 @@
+\section{Introduciton}
+
+%NMT systems are well suited for any problem that can be formulated as mapping an input sequence to an output sequence \citep{sutskever2014sequence}.
+
+Machine Translation (MT) is the process of translating text automatically from one natural language to another  language \citep{russell2002artificial}. Until recently Statistical Machine Translation (SMT) approaches like phrase-based translation models \citep{koehn2003statistical} dominated the field of machine translation. They were widely adopted and used in translation engines like Google Translate. Neuro Machine Translation (NMT) is a recent approach to MT using Neural Networks.  \cite{kalchbrenner2013recurrent} proposed the first end to end system using encoder-decoder structure for MT. This led to development of more complex encoder-decoder models like \cite{graves2013generating}, \cite{kalchbrenner2013recurrent}, \cite{sutskever2014sequence}, \cite{cho2014learning}, etc., with additional functionality and improved performance.
+
+These NMT systems use vector representation to represent input words called word embeddings. It is a way of representing words in the vocabulary using vectors in a high dimensional space. These embeddings can be pre-trained on a large monolingual corpus and saved for later use. Embedding models discussed in  \cite{bengio2003neural}, \cite{mikolov2013distributed}, \cite{pennington2014glove}, etc., learn word representations in continuous vector space where similar words occur closer to each other. 
+
+
+One of the challenges when using pre-trained word embeddings for any natural language processing (NLP) task is the issue of handling out-of-vocabulary (OOV) words. This problem occurs when a word that was unseen during training time occurs in testing phase during translation. This problem is more pronounced while working with morphologically rich languages or low resource languages. In this project, I propose and implement an NMT systems based on \cite{bahdanau2014neural} that is able to handle OOV words online during translation. OOV words will be analysed for their morphology and mapped to an in-vocabulary word using the technique from \cite{soricut2015unsupervised}.
+
+Next section gives the background for the project. In Section 3, related NMT systems that can handle unknown words and their techniques are presented. In section 4, the proposed work and its components are presented. Dataset used in the project and Evaluation metric are presented in section 5. In the last section, the implementation status and timeline for the projects is given.
+%
+%a classic NMT model from \cite{bahdanau2014neural} and extending the work of \cite{soricut2015unsupervised} for handling OOV words online during translation. 
+
+

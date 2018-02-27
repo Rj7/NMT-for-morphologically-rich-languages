@@ -1,0 +1,12 @@
+\section{Dataset and Evaluation}
+The proposed approach will be evaluated on English-German translation using the bilingual, parallel corpora from ACL WMT 2016\footnote{http://www.statmt.org/wmt16/translation-task.html}. The training corpora include Europarl (1.9M sentences), Common Crawl corpus (2.3M sentences) and News Commentary v11 (240,000 sentences). newstest2013 (3000 sentences) and newstest2014 (3000 sentences) data will be used as validation dataset.
+
+To be comparable with other existing NMT systems, I will evaluate the models using standard BLEU score metric from  \cite{papineni2002bleu}. BLEU is one of the most popular and widely used automatic MT evaluation metric. It reports the correlation of machine translations with human translations measured using degree of n-gram overlap. As a baseline model, the attention model from \cite{bahdanau2014neural} will be implemented and used. Then, the proposed OOV word handling approach will be added to the baseline model and the translation performance will be studied. Translation performance will reported on newstest2015(3000 sentences) and newstest2016(3000 sentences) dataset from ACL WMT 2016. If the proposed model shows an improvement in BLEU score, this work can be extended and applied to languages with richer morphology, especially agglutinative languages like Turkish or Tamil.
+
+
+\section{Experiments}
+For this experiments, 
+First, do words embeddings trained from machine translation hold similar properties as word embeddings trained for language modelling.
+No, they do not hold the same properties.
+
+
