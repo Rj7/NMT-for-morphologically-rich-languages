@@ -12,7 +12,7 @@ For NMT system, I will implement the attention based encoder-decoder RNN model f
 
 
 
-\subsection{Attention based Encoder-Decoder model \citep{bahdanau2014neural}}
+\subsection{Attention based Encoder-Decoder model}
 
 \cite{bahdanau2014neural} proposed an attention based encoder-decoder architecture which is capable of learning word alignment between source and target sentences. This allowed for the encoder to produce better sentence representation for longer sentence which in turn improved the translation quality. In their additive approach, a single feed forward neural networks that can learn to assign different weights to the hidden layer vectors was used. These weighted sum of the hidden layer vectors $h_{1:n}$ called context vectors $c_i$ is calculated each time decoder generates a new word as shown in figure \ref{attention}.
 
@@ -33,7 +33,7 @@ where $att(s_i, h_j)$ is an attention function that calculates the weights for e
 	\label{attention}
 \end{figure}
 
-\subsection{Unsupervised Morphological induction \citep{soricut2015unsupervised}}
+\subsection{Unsupervised Morphological induction}
 
 \cite{soricut2015unsupervised} proposed a language-agnostic, heuristic method to capture morphological transformations by exploiting regularities present in word embeddings \citep{mikolov2013distributed}. Their method automatically induces morphological rules and transformations to represent them as vectors in the same embedding space. During testing, out of vocabulary words can be mapped into the same vector space using the learned morphological transformations. In this algorithm, the morphological rules are learned as follows.
 
