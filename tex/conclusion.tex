@@ -1,0 +1,18 @@
+
+
+\section{Summary}
+Machine translation can aid in overcoming the human language barrier in communication. Current translation systems rely on large amounts of parallel corpora for training. But, most of the languages in the world have only a very small amount data available for training these system. Translating morphologically rich languages is more difficult as compared to morphologically poor languages. 
+
+
+In this project, our goal was to improve the quality of machine translation for morphologically rich, low-resource languages. We presented a vocabulary expansion technique that improved the machine translation from (German and Turkish) $\rightarrow$ English. We demonstrated that our approach improved the translation performance by approximately 2-3 BLEU points.
+
+In our proposed approach, we use pre-trained, fixed word vectors as our input. By doing so, we separated the problem of handling Out of Vocabulary (OOV) words from NMT systems. Therefore, as long as the word embeddings capture the morphological and semantic information of the words and exhibit regularity in their mapping, the translation systems will be able to use that information to translate OOV words. 
+
+Our approach is independent of the underlying architecture of the base NMT system. This technique can be incorporated in any NMT systems that work at word level instead of character or sub-word level.
+
+\section{Future Directions}
+
+In our approach, we used a simple attention based NMT system from \cite{luong2015effective}, as the underlying base system. The performance in the translation task is limited by the ability of the base system. In future, more experiments, with varying training data sizes can be done on more sophisticated models like purely attention based architecture or convolution neural network (CNN) can be done. Recently, \cite{gehring2017convolutional} proposed a fully parallelizable CNN architecture for translation. \cite{vaswani2017attention} proposed a simple network architecture without using any recurrence or convolution. These two networks can be a very good candidate for a base system.
+
+
+Another promising direction to explore is the expansion of target vocabulary of NMT systems. If a similar improvement is observed in the translation quality, the training time of the network can be greatly reduced.

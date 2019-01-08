@@ -1,0 +1,68 @@
+%In the last chapter, we discussed why it is important to get
+In this chapter, we compare different approaches to generate vector representations for OOV words. \citeauthor{soricut2015unsupervised}'s approach is implemented and compared with other existing approaches. The goal of this study is to compare various techniques and use the best performing model in NMT. The models reported in this study are not specific to machine translation. However, they are general methods used to generate vector representations for any word based on its morphology, or the subword units present in them. 
+
+In this experiment, we compare the performance of three popular pre-trained word embeddings models \citep{mikolov2013distributed,pennington2014glove,bojanowski2016enriching} and the implemented morphological transformation approach on standard word similarity dataset. We try to answer the following questions through this study.
+
+\begin{itemize}
+	\item What are all the techniques to generate a vector representation for OOV words and their performance? 
+	\item How does the implemented morphological transformation technique compare against other approaches?
+	\item Which technique would be ideal to use in NMT systems for handling OOV words?
+%	\item Which techniques generates the most accurate vector representation for these words?
+
+\end{itemize}
+
+
+%\section[Section Title. Section Subtitle]{Experiment 1:\\ {\large A Comparison of Vector Representation for OOV words}}
+
+\section{Dataset and Evaluation Metric}
+
+We use the Stanford \textbf{Rare Word (RW) Similarity dataset}  for English from \cite{luong2013better} to evaluate the vector representation of rare words. This dataset contains 2034 morphologically complex word pairs with similarity scores for each pair. They used Amazon mechanical turk to collect 10 human similarity rating on a scale of 0 to 10 for each word pair. The average of all the human judgement scores is taken as the similarity score. The words in RW dataset have a higher degree of English morphology compared to other word-similarity datasets. So, an evaluation on this dataset can be used as a measure of the ability to handle rare and unknown words.
+
+To study the performance, we use \textbf{Spearman's rank correlation coefficient} $\rho$ \citep{spearman1904proof}. The value varies from 0 to 1, with 1 indicating perfect correlation. We use it to report the correlation of the cosine similarity values between the word vectors for each pair, and the human judgement scores.
+
+\section{Results}
+
+The performance of all the models on RW dataset is presented in Table \ref{rw_results}. For skipgram \citep{mikolov2013distributed} and GloVe \citep{pennington2014glove} models, we used the publicly available pre-trained word embeddings. On top of skipgram vectors and GloVe vectors, we induce morphological transformations and report their performance. For both the fastText model, we use their pre-trained model trained on Wikipedia dump\footnote{https://fasttext.cc/docs/en/pretrained-vectors.html}. 
+
+For \textit{fastText + subword} model, we use the pretrained sub-word model from \citep{bojanowski2016enriching} to handle OOV words. We used this instead of \textit{fastText + morph} for two reasons: a) \textit{subword} model can handle any OOV word whereas the \textit{morph} model cannot handle words for which the morphological transformation are not extracted from available words. b) \textit{fastText + subword} model is one best performing model in RW dataset reported in the literature \citep{bojanowski2016enriching}.
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|c|c|}
+		\hline
+		\textbf{Word Embedding Models}                                                                & \textbf{\begin{tabular}[c]{@{}c@{}}Spearman Correlation \\$ \rho \times 100$\end{tabular}}  &
+		\textbf{\begin{tabular}[c]{@{}c@{}}No of word pairs handled \\$(2034)$\end{tabular}}  \\ \hline
+		SkipGram                                                                              & 22.9          & 1825                                                                                    \\ \hline
+		SkipGram + morph                                                           & 24.5 \textbf{(+1.6)}  
+		& 1988                                                                                            \\ \hline
+		GloVe 6B  & 22.5   &1782                                                                                          \\ \hline
+		GloVe 6B + morph             & 25.9                                        \textbf{(+3.4)}       &1996\\ \hline
+		fastText    & 29.9   & 1966\\ \hline
+		fastText + subword   & 36.76   & 2034\\ \hline
+		%\begin{tabular}[c]{@{}l@{}}Bojanowski et al (2016)\end{tabular} & 48                                                                                               \\ \hline
+		%Sun et al (2016)                                                                   & 50.4                                                                                               \\ \hline
+		%Barkan (2017)                                                                      & 52.5                                                                                               \\ \hline
+	\end{tabular}
+	\caption{Performance of pre-trained and morphological transformation induced word embeddings on RW dataset}
+	\label{rw_results}
+\end{table}
+
+From Table \ref{rw_results}, it can be seen that inducing morphological transformations improves the Spearman correlation between human judgement and predicted cosine similarity. By using this method, vector representations for approximately 10\% more words were obtained for SkipGram and GloVe. The high correlation indicates that the vector representations for OOV words (10\%) are almost as good as vector representations for the known words. 
+%(1782 words using glove6B and 1996 words using glove6B + Morph). 
+
+%The spearman correlation on RW dataset, for this implementation and other word embeddings models are shown in Table 1.  This is the reason for the huge difference in correlation between models shows in Table \ref{my-label} and Table 2. From Table 2,  
+
+
+Despite the increase in performance by using morphological transformations, we were not able to map all the OOV words to an in-vocabulary word. We were able to generate word vectors for only 1996 out of 2034. Even the baseline fasttext model from \cite{bojanowski2016enriching} outperforms all the other models by a good margin. When OOV words are handled based on their subword information, we see approximately 7-point increase in the Spearman correlation $\rho$. Also, the \textit{fasttext + subword} model is able to generate vector representation for all the words.  
+
+
+\section{Implementation challenges}
+In our implementation of morphological induction, we were able to improve on the baseline by approximately 2 points. However, we were not able to replicate the results of the original paper. \citeauthor{soricut2015unsupervised} used a  500-dimension skipgram model as their baseline model. They report a 6-point increase in Spearman $\rho$ over their baseline model.  There are a few differences in the implementation from the original model, that may have hindered the algorithm from generating better morphological transformations.
+
+In our implementation, the morphological rules were extracted only from 100,000 most frequent words, from a vocabulary of 3 million words. This was done to allow quick turn around time for implementation and experimentation of the algorithm. Common words are morphologically poorer as compared to rarer words. Extracting morphological rules from all the words in vocabulary may result in further increase in the correlation.
+
+To find the nearest neighbour for a given vector in the vector space, we used a k-d tree based nearest neighbour search. We used 100 trees to build the indexing for all the vectors. This allows for faster querying at the cost of precision. Building the index using more number of trees, say 300, will allow for higher precision at the cost of querying time.
+
+
+\subsection*{Summary}
+From this experiment, we observe that \citeauthor{bojanowski2016enriching}'s approach generates a  semantically more accurate vector representation for words in RW dataset, as compared to other models. The model can also generate accurate word representations for all possible words. This is a very important property that can aid translation for morphologically rich languages. Based on this result, we use the fasttext model in NMT system to handle OOV words which we will discuss in the next chapter.

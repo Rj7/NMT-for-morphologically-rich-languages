@@ -1,0 +1,334 @@
+In this chapter, we present how we use the fasttext model to expand source vocabulary and improve the quality of machine translation for morphologically rich languages. In Section \ref{sec:mtdataset}, we describe the dataset used for the translation task. We present the pre-processing steps and training details in Section \ref{preprocess}. In Section \ref{sec:mt_eval}, we describe the evaluation metric used to report the quality of generated translations. The performance of the proposed approach is presented in the Section \ref{sec:du_en} and Section \ref{sec:tr_en}. 
+
+For the proposed approach, the translation task is performed on two language pairs: German $\rightarrow$ English and Turkish $\rightarrow$ English. Both these languages are morphologically rich and well studied in previous works \citep{bahdanau2014neural,luong2015effective,sennrich2015neural,gulcehre2015using}, particularly German - English translation. They also have a very large vocabulary making them ideal candidates for this study. German $\rightarrow$ English is high resource task in machine translation with 4.5M sentence pairs available for training. But, Turkish $\rightarrow$ English is low resource task with around 160,000 sentence pairs available for training. For the experiments in this study, both of the languages are studied under low-resource settings; since the goal of this study is to improve translation performance for morphologically rich, low-resource languages.
+
+%From these experiments, we try to answer the following question
+
+%\begin{itemize}
+%	\item 
+%\end{itemize}
+
+
+
+\section{Dataset }
+\label{sec:mtdataset}
+
+%The translation task was performed on two languages: German $\rightarrow$ English and Turkish $\rightarrow$ English. 
+For both of the language pairs, we used the WIT$^{3}$ dataset \citep{cettolo2012wit3} from IWSLT'14 machine translation track \citep{cettolo2014report}. The dataset consists of sentence aligned subtitles for TED and TEDx talks. WIT dataset contains 149,000 sentence pairs for Turkish - English and 160,000 sentence pairs for German - English. During testing time, the translation performance is reported on test data from the WIT$^{3}$ corpus. Additionally, German $\rightarrow$ English model will also be evaluated newstest2012 (3000 sentences) and newstest2013 (3000 sentences) dataset from ACL WMT'14. We do this as a measure of generalization, since the newstest data is from a different domain than training data. 
+
+%For testing, we use test data provided in the same WIT$^{3}$ dataset. 
+
+%Our validation set comprises of 6969 sentence pairs which was taken from the training data. The test set is a concatenation of dev2010, dev2012, tst2010, tst2011 and tst2012 which results in 6750 sentence pairs. The English dictionary has 22822 words while the German has 32009 words.
+
+
+\begin{table}[!htb]
+	\begin{subtable}{.5\linewidth}
+		\centering
+		
+		\begin{tabular}{|l|l|l|}
+			\hline
+			& Turkish     & English     \\ \hline
+			No. of sentences         & \multicolumn{2}{c|}{149k} \\ \hline
+			No. of words             & 3.3M        & 2.7M        \\ \hline
+			Unique words      & 160k         & 48k         \\ \hline
+%			Average  Length & 31.6        & 22.6        \\ \hline
+		\end{tabular}
+		\caption{Turkish - English}
+	\end{subtable}%
+	\begin{subtable}{.5\linewidth}
+		\centering
+		
+		\begin{tabular}{|l|l|l|}
+			\hline
+			& German     & English     \\ \hline
+			No. of sentences         & \multicolumn{2}{c|}{160k} \\ \hline
+			No. of words             & 3M        & 3.1M        \\ \hline
+			Unique words      & 112k         & 49k         \\ \hline
+%			Average  Length & 18.5       & 17.5       \\ \hline
+		\end{tabular}
+		\caption{German - English}
+	\end{subtable}
+	\caption{Training data statistics} 
+	\label{stats}
+\end{table}
+
+In addition to above datasets, we used the pre-trained word embedding model\footnote{https://fasttext.cc/docs/en/pretrained-vectors.html} from \cite{bojanowski2016enriching} for English, German and Turkish. These word vectors are trained on Wikipedia data \footnote{https://dumps.wikimedia.org/}. 
+
+
+\section{Training}
+\label{preprocess}
+The data was preprocessed using a data preparation script\footnote{https://github.com/facebookresearch/MIXER/blob/master/prepareData.sh} from \cite{ranzato2015sequence}. The Moses tokenizer is used to tokenize the sentences. All sentences are converted to lowercase and sentences with more than 80 words are removed. Detailed statistics of the parallel corpora used for training is given in Table \ref{stats}. The source and target vocab size was limited to 50k for training.
+ 
+In all our models, the embedding layer dimension is 300. The number hidden layers in encoder and decoder is set to 2, each layer with 500 dimensions. We trained all our models for 20 epochs, using Adam optimizer and used the best performing model based on accuracy and perplexity for evaluation. The batch size was fixed to 128. As suggested \cite{luong2015effective}, we use a dropout probability of 0.2 for our LSTMs. We trained our models on Nvidia Tesla P100 GPU, from Compute Canada\footnote{www.computecanada.ca}, where we achieved a speed of 5k target words per second.  
+
+
+%\begin{table}[!htb]
+%	\caption{Statistics of Training Data}
+%	\begin{minipage}{.5\linewidth}
+%		\caption{Turkish-English}
+%		\centering
+%		
+%	\end{minipage}
+%	\begin{minipage}{.5\linewidth}
+%		\centering
+%		\caption{German-English}
+%		\begin{tabular}{|l|l|l|}
+%			\hline
+%			& Turkish     & English     \\ \hline
+%			Sentences         & \multicolumn{2}{c|}{160k} \\ \hline
+%			Words             & 3.3M        & 2.7M        \\ \hline
+%			Unique words      & 160         & 48k         \\ \hline
+%			Average  Length & 31.6        & 22.6        \\ \hline
+%		\end{tabular}
+%	\end{minipage} 
+%\end{table}
+%Additionally, for turkish I used the SETimes corpus
+%
+%For the experiment on vocasflakfds, I used pre-trained word embeddings from \cite{mikolov2013efficient,mikolov2013distributed}, \cite{pennington2014glove} and \cite{bojanowski2016enriching}. In their work, the authors used words vectors of 500 dimensions. In this experiment, I used embeddings of size 300 dimensions for SGNG and 50 dimensions for Glove.  
+
+%The proposed approach will be evaluated on English-German translation using the bilingual, parallel corpora from ACL WMT 2016\footnote{http://www.statmt.org/wmt16/translation-task.html}. The training corpora include Europarl (1.9M sentences), Common Crawl corpus (2.3M sentences) and News Commentary v11 (240,000 sentences). newstest2013 (3000 sentences) and newstest2014 (3000 sentences) data will be used as validation dataset.
+
+\section{Evaluation}
+\label{sec:mt_eval}
+To be comparable with other existing NMT systems, we have evaluated the models using standard BLEU score metric from  \cite{papineni2002bleu}. BLEU is one of the most popular and widely used automatic MT evaluation metric. The score varies from 0 to 100 and higher scores denote better translation. It reports the correlation of machine translations with human translations measured using the degree of n-gram overlap. As a baseline model, the attention model from \cite{luong2015effective} was used. Then, the proposed OOV word handling approach will be added to the baseline model, and the translation performance will be studied. 
+
+During the testing time, the vocabulary of the proposed model is expanded dynamically. To do this, we first create a vocabulary of all the words in the source language sentences. For each word in the vocabulary, we use pre-trained embedding model from \cite{bojanowski2016enriching} to generate vector representation. In this model, each word $w$ is represented as bag of character $n$-grams. For example, the word \textit{where} will be represented using character $n$-grams \textit{ $<$wh, whe, her, ere, re$>$ } and the special sequence \textit{$<$where$>$}. The vector representation of the word $w$ is the sum of vector representations of its $n$-grams. Mathematically, this can be defined as follows:
+
+\begin{equation}
+s(w,c) = \sum_{g \in G_w} z_g^{T} v_c.
+\end{equation}
+
+where $w$ is the input word and $c$ is the context word. $z_g$ and $v_c$ are the vector representations for each $n$-gram and context word respectively. $G_w$ is the set of all $n$-grams appearing in the word $w$. Then, the embedding matrix of the NMT system is concatenated with the vector representations the OOV words obtained using the above model.
+
+%If the proposed model shows an improvement in BLEU score, this work can be extended and applied to languages with richer morphology, especially agglutinative languages like Turkish or Tamil.
+
+
+
+%First, do words embeddings trained from machine translation hold similar properties as word embeddings trained for language modelling. 
+%No, they do not hold the same properties.
+
+%
+%\begin{table}[]
+%	\centering
+%	\begin{tabular}{|l|l|l|}
+%		\hline
+%		\multicolumn{1}{|c|}{\textbf{System}}                                                   & \multicolumn{2}{c|}{\textbf{BLEU}} \\ \hline
+%		& tedtest       & newstest2013       \\ \hline
+%		Global Attention Model                                                                  & 27.58         & 13.73              \\ \hline
+%		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + vocabulary expansion\end{tabular} & 28.20         & 15.01              \\ \hline
+%	\end{tabular}
+%	\caption{German $\rightarrow $ English Translation performance on IWSLT test set and newstest2013.}
+%	\label{my-label}
+%\end{table}
+
+
+\section{German $\rightarrow$ English Translation}
+\label{sec:du_en}
+Table \ref{german_results_indomain} and Table \ref{german_results_outdomain} present comparisons of proposed approach with the baseline model from \cite{luong2015effective} on German $\rightarrow$ English translation. The results demonstrate that the proposed vocabulary expansion significantly improves the translation performance, particularly for out of domain data. The performance gain is noted separately for adding fixed word embedding and for adding expanded vocabulary. 
+
+As reported in Table \ref{german_results_indomain}, for in-domain test data, the performance gains for the proposed approach are in the range of approximately 2-2.8 BLEU points. As a measure of generalization, we also studied the performance on out of domain data. On the test data from WMT'14, the performance gains are approximately 3 BLEU points. We notice that the performance gain is higher in out of domain data, making this approach very suitable for low resource languages. 
+
+\begin{table}[ht]
+	\centering
+	\begin{tabular}{|l|l|l|l|}
+		\hline
+		\multicolumn{1}{|c|}{\textbf{System}}                                                                                  & \multicolumn{3}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}BLEU score on \\ IWSLT test data \end{tabular}}} \\ \hline
+		& tst2010                       & tst2011                         & tst2012                      \\ \hline
+		Global Attention Model                                                                                                 & 27.09 $\pm$ 0.96   &
+		30.32 $\pm$ 0.97      &    
+		27.11 $\pm$ 0.91                   \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + pre-trained word embeddings\end{tabular}                          & 27.40   $\pm$ 0.95                      & 
+		31.25   $\pm$ 0.99                        &
+		26.80   $\pm$ 0.89           \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + pre-trained word embeddings \\ + expanded vocabulary\end{tabular} & 
+		\textbf{29.04  $\pm$ 0.90}                       &
+		\textbf{33.18  $\pm$ 1.03}                         &
+		\textbf{28.23  $\pm$ 0.88}                      \\ \hline
+		
+	\end{tabular}
+	\caption{German $\rightarrow $ English Translation performance on \textbf{in-domain test data} from IWSLT'14 with 95\% confidence interval}
+	\label{german_results_indomain}
+\end{table}
+
+
+\begin{table}[ht]
+	\centering
+	\begin{tabular}{|l|l|l|}
+		\hline
+		\multicolumn{1}{|c|}{\textbf{System}}                                                                                  & \multicolumn{2}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}BLEU on \\ WMT test data\end{tabular}}} \\ \hline
+		& news2012                                      & news2013                                       \\ \hline
+		Global Attention Model                                                                                                 & 10.85  $\pm$ 0.37                                   & 13.09 $\pm$ 0.43                                  \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + pre-trained word embeddings\end{tabular}                          &
+		12.75 $\pm$ 0.44                                         &
+		14.67  $\pm$  0.44                                       \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + pre-trained word embeddings \\ + expanded vocabulary\end{tabular} &
+		\textbf{13.77 $\pm$ 0.45}                                       & \textbf{16.01  $\pm$ 0.5}                                         \\ \hline
+	\end{tabular}
+	\caption{German $\rightarrow $ English Translation performance on \textbf{Out of domain test data} from WMT'14 with 95\% confidence interval}
+	\label{german_results_outdomain}
+		
+\end{table}
+
+%\begin{table}[ht]
+%	\centering
+%	\begin{tabular}{|c|c|c|c|c|c|}
+%		\hline
+%		\multicolumn{1}{|c|}{\textbf{System}}                                                                                  & \multicolumn{5}{c|}{\textbf{BLEU}}                                            \\ \hline
+%		\multicolumn{1}{|c|}{\multirow{2}{*}{}}                                                                                & \multicolumn{3}{c|}{In domain data (IWSLT)} & \multicolumn{2}{c|}{Out of domain data (WMT)} \\ \cline{2-6} 
+%		\multicolumn{1}{|c|}{}                                                                                                 & tst2010    & tst2011    & tst2012   & newstest2012       & newstest2012       \\ \hline
+%		Global Attention Model                                                                                                 & 27.07 $\pm$ 0.96      & 30.34 $\pm$ 0.96     & 27.12  $\pm$ 0.96   & 10.86  $\pm$ 0.96            & 13.10              \\ \hline
+%		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + fixed word embeddings\end{tabular}                          & 27.44      & 31.23      & 26.78     & 12.77              & 14.68              \\ \hline
+%		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + fixed word embeddings \\ + expanded vocabulary\end{tabular} &    29.04        &  33.17          &  28.20         &      13.77              &     16.02               \\ \hline
+%	\end{tabular}
+%	\caption{German $\rightarrow $ English Translation performance on IWSLT test data and newstest data.}
+%	\label{german_results}
+%\end{table}
+
+
+
+Two possible explanations for the huge performance gap between in-domain data and out of domain data are:
+\begin{itemize}
+	\item The model was trained in spoken language domain from IWSLT. However, the test data from WMT is news data (written language). Written languages are generally more complicated than spoken languages.
+	\item Out of Vocabulary words (both source and target) are higher in WMT test data in comparision to IWSLT test data.
+\end{itemize}
+
+It has already been shown in the literature that using pre-trained word embedding helps in faster convergence and improved performance \citep{garcia2015document,delbrouck2017visually}. This is shown in the small increase of the BLEU score in the second column of the Table \ref{german_results_indomain} and Table \ref{german_results_outdomain}. By fixing the word representations, we retain the linguistics properties captured in the word embedding model. This helps in translating OOV words.
+
+In the \textit{Global attention model} and \textit{Global attention model + fixed word embeddings}, the vocabulary size of the network is fixed at 50,000. When using the expanded vocabulary model, the vector representations for all the unknown words are generated using fastText \citep{bojanowski2016enriching}. Because of this, the out of vocabulary words which are semantically similar or morphologically related to an in-vocabulary word gets translated correctly. In the literature, we found only \cite{bahar2017rwth} reported performance on the same test data as ours. They reported a performance of 37.3 BLEU points on tst2010. The difference in performance of their model and our model can be attributed to the size of training data. They used 2.1M parallel sentence pairs for training while we used only 160k.
+
+%Also, the morphological and semantic regularities preent in the word embedding model are also used map OOV words.
+
+
+
+
+\section{Turkish $\rightarrow$ English Translation}
+\label{sec:tr_en}
+To study the suitability of the approach to a morphologically more complex but low resource language, we ran the experiments on Turkish $\rightarrow$ English translation. Table \ref{turkish_results} presents the performance of the proposed approach and the baseline attention model. The results demonstrate that the translation performance significantly improved compared to the baseline attention model. We report performance only on in-domain data from IWSLT'14. To the best of my knowledge, no other test dataset is available to test the out of domain performance.
+
+Similar to German $\rightarrow$ English, when we use pre-trained word embeddings alone, the performance improves by 1.0 - 1.5 BLEU points. The source vocabulary expansion technique gives another 1.2 BLEU points improvement. Overall, we achieve performance gain of 1.6 - 2.3 BLEU points by expanding the vocabulary of the source language.
+
+\begin{table}[ht]
+	\centering
+	\begin{tabular}{|l|l|l|l|}
+		\hline
+		\multicolumn{1}{|c|}{\textbf{System}}                                                                                  & \multicolumn{3}{c|}{\textbf{BLEU}} \\ \hline
+		& tst2010    & tst2011   & tst2012   \\ \hline
+		Global Attention Model                                                                                                 & 15.60 $\pm$ 0.72     & 15.79 $\pm$ 0.83    & 16.02 $\pm$ 0.73    \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + pre-trained word embeddings\end{tabular}                          & 16.16 $\pm$ 0.72     & 17.11  $\pm$ 0.86    & 17.27 $\pm$ 0.75    \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + pre-trained word embeddings \\ + expanded\end{tabular} & \textbf{17.21 $\pm$ 0.75}     & \textbf{18.31 $\pm$ 0.90 }    & \textbf{18.41 $\pm$ 0.75}   \\ \hline
+	\end{tabular}
+	\caption{BLEU Score: Turkish $\rightarrow$ English on IWSLT'14 data}
+	\label{turkish_results}
+\end{table}
+
+The difference in performance between German $\rightarrow$ English and Turkish $\rightarrow$ English can be attributed to the low resource availability of Turkish.
+
+\begin{itemize}
+	\item The source vocabulary size for German is 110,000 whereas the source vocabulary size for Turkish is 160,000. This makes it harder for the baseline model to capture learn the input-output mapping.
+	\item When compared with German $\rightarrow$ English, the low performance of \textit{baseline + pre-trained word vector} and \textit{expanded vocabulary} model can be attributed to the lower quality of the pre-trained word vector for Turkish. The word vector for German was trained on 2.2 million Wikipedia articles whereas the Turkish word vectors were trained on only 100,000 Wikipedia articles.
+\end{itemize}
+
+
+
+\subsection*{Transformer model}
+This vocabulary expansion technique is independent of any underlying architecture. We can use this technique for any word based NMT systems. To study the effectiveness to the vocabulary expansion technique using a different word based NMT system, we ran the same experiment on the transformer model proposed in \cite{vaswani2017attention}. For all the transformer model, we used the same parameters as the original paper. The word vector and RNN size was set to 512 with 6 layers. Adam optimizer with a learning rate of 2 and learning rate decay was used. The result of the experiments are shown in Table \ref{turkish_trans_results}. 
+
+\begin{table}[ht]
+	\centering
+	\begin{tabular}{|l|l|l|l|}
+		\hline
+		\multicolumn{1}{|c|}{\textbf{System}}                                                                                  & \multicolumn{3}{c|}{\textbf{BLEU}} \\ \hline
+		& tst2010    & tst2011   & tst2012   \\ \hline
+		Transformer                                                                                                 & 12.66 $\pm$ 0.66     & 13.51 $\pm$ 0.75    & 13.27 $\pm$ 0.66    \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Transformer\\ + pre-trained word embeddings\end{tabular}                          & 17.03 $\pm$ 0.86     & 18.08  $\pm$ 0.86    & 18.86 $\pm$ 0.77    \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Transformer\\ + pre-trained word embeddings \\ + expanded vocabulary\end{tabular} & \textbf{18.58 $\pm$ 0.79}     & \textbf{19.76 $\pm$ 0.92}     & \textbf{20.27 $\pm$ 0.80}   \\ \hline
+	\end{tabular}
+	\caption{BLEU Score: Turkish $\rightarrow$ English on IWSLT'14 data}
+	\label{turkish_trans_results}
+\end{table}
+
+Compared to the baseline transformer model, we see a significant increase of approximately 4-5 BLEU points when we used pre-trained word embeddings from fasttext. The vocabulary expansion technique further increases the performance by approximately 1.5 BLEU points. 
+
+In the literature, we find that only \cite{sennrich2016improving} and \cite{gulcehre2015using} reported results on the same test data as ours. In both the papers, they used twice the amount of training data as we did. \cite{gulcehre2015using} integrated language model training on monolingual data into an NMT system. \cite{sennrich2016improving} proposed a technique to improve the performance of NMT by constructing synthetic training data obtained using back-translation. \cite{sennrich2016improving} reported a  performance of 21.2 and 21.1 BLEU points on \textit{tst2011} and \textit{tst2012} respectively. We found that the performance of our model and \citeauthor{gulcehre2015using} are very close in \textit{tst2011} and \textit{tst2012}. But \citeauthor{sennrich2016improving}'s model outperforms our model only by approximately 1 BLEU points despite being trained on twice the amount of training data.
+
+
+\begin{table}[htb!]
+	\centering
+	\begin{tabular}{|l|l|l|l|l|l|}
+		\hline
+		& \multicolumn{5}{c|}{BLEU}                                                     \\ \hline
+		\multicolumn{1}{|c|}{Dataset}                                                                                           & tst2010 & tst2011 & tst2012 & news2012               & news2013               \\ \hline
+		\multicolumn{6}{|c|}{German $\rightarrow$ English}                                                                                                                                                                    \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + pre-trained word embeddings \\ + expanded vocabulary\end{tabular} & 29.04   & 33.18   & 28.23   & \textbf{13.77}                  & \textbf{16.01}                  \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Global Attention Model \\ + BPE\end{tabular}                                                 & \textbf{29.78}   & \textbf{34.23 }  & \textbf{30.17}   & 4.78                   & 5.32                   \\ \hline
+		\multicolumn{6}{|c|}{Turkish $\rightarrow$ English}                                                                                                                                                                   \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Transformer \\ + pre-trained word embeddings \\ + expanded vocabulary\end{tabular}           & 18.58   & 19.76   & \textbf{20.27}   & \multicolumn{1}{c|}{-} & \multicolumn{1}{c|}{-} \\ \hline
+		\begin{tabular}[c]{@{}l@{}}Transformer\\ + BPE\end{tabular}                                                             & \textbf{19.04}   & \textbf{20.46 }  & 20.00   & \multicolumn{1}{c|}{-} & \multicolumn{1}{c|}{-} \\ \hline
+	\end{tabular}
+	
+	\caption{Comparision with BPE for both the language pairs}
+	\label{comparision}
+\end{table}
+
+\section{Comparison with BPE}
+In this section, we compare the source vocabulary expansion approach with BPE approach proposed in \cite{sennrich2015neural}. BPE is particularly useful for morphologically rich language as it operates at subword level and capable of modeling open-vocabulary translation. Table \ref{comparision} presents the performance of both the models when trained on IWSLT'14 dataset. 
+
+In in-domain data, BPE approach consistently outperforms our approach by approximately 0.5 - 1 BLEU points. For both the language pairs, BPE encoding reduced the source vocabulary approximately 7k - 8k ad target vocabulary to approximately 5k resulting in faster training time. But for out-of-domain data, BPE performed very poorly in comparison to our model. We suspect that the BPE code learned on IWSLT dataset did not fit the test data from newstest. In Table \ref{sample_trans}, we present some of translations from the baseline models and the vocabulary expanded model. 
+\begin{table*}%[tbh!]
+	\centering
+	\resizebox{15cm}{!}{
+		\begin{tabular}{|c|c|p{15.5cm}|}
+			% sent 1046 
+			\hline
+			\hline
+			\multirow{7}{*}{1} & \textit{Source} & sie wuchs zu einer zeit auf , in der konfuzianismus die soziale norm und der lokale mandarin die wichtigste person war. \\
+			& \textit{Target} & she grew up at a time when confucianism was the social norm and the local mandarin was the person who mattered. \\
+			\cline{2-3}
+			& \multirow{2}{*}{\it{Baseline}} & it grew up at a time when the social norm and the social norm was the most important person in retirement.\\
+			\cline{2-3}
+			& \it{+ fixed embedding} & she grew up at a time when the social norm and the local chinese , the most important person was . \\
+			\cline{2-3}
+			& \multirow{2}{*}{\it{+ expanded vocab}} & she grew up at a time in buddhism , the social norm , and the local speaker was the most important person .\\
+			\hline
+			\hline
+			% sent 80
+			\multirow{7}{*}{2} & \textit{Source} & evolution bedeutet nicht zwangsläufig das längste leben zu bevorzugen.\\
+			& \textit{Target} & evolution does not necessarily favor the longest-lived. \\
+			\cline{2-3}
+			& \multirow{1}{*}{\it{Baseline}} & evolution doesn't necessarily mean the longest biggest life. \\
+			\cline{2-3}
+			& \it{+ fixed embedding} & evolution doesn't necessarily mean the longest life to prefer. \\
+			\cline{2-3}
+			& \multirow{1}{*}{\it{+ expanded vocab}} & evolution doesn't necessarily mean to prefer the longest life .\\
+			\hline
+			\hline
+			
+		\end{tabular}
+	}
+	\caption{\textbf{Sample translations - }for each example, the source sentence, target translation, baseline translations and vocabulary expanded translation are showed.}
+	\label{sample_trans}
+\end{table*}
+
+\subsection*{Summary}
+In this chapter, we presented an experimental evaluation of how the quality of machine translation for morphologically rich languages can be improved by expanding source language vocabulary. We achieve a performance gain of 2-3 BLEU points for both German $\rightarrow$ English and Turkish $\rightarrow$ English. We also note that we see a larger performance gain on out of domain data as compared to in-domain data. We also compared the performance with another popular approach for morphologically rich languages. Our model is competitive, but doesn't outperform BPE in in-domain data. In out-of-domain data, our model performs better than BPE. 
+
+%\subsection{Vocabulary Expansion}
+%\begin{itemize}
+%	\item Train word embeddings using language modelling
+%	\item Use 50k most frequents word in word embeddings in NMT without updating
+%	\item For rare and unknown words, do a morphological analysis to get more accurate word representations.	
+%\end{itemize}
+
+%
+%\begin{table}[]
+%	\centering
+%	\begin{tabular}{|l|l|l|}
+%		\hline
+%		\multicolumn{1}{|c|}{\textbf{System}}                                                   & \multicolumn{2}{c|}{\textbf{BLEU}} \\ \hline
+%		& tedtest       & newstest2013       \\ \hline
+%		Global Attention Model                                                                  & 27.58         & 13.73              \\ \hline
+%		\begin{tabular}[c]{@{}l@{}}Global Attention Model\\ + vocabulary expansion\end{tabular} & 28.20         & 15.01              \\ \hline
+%	\end{tabular}
+%	\caption{Turkish $\rightarrow $ English Translation performance on IWSLT test set and newstest2013.}
+%	\label{my-label}
+%\end{table}

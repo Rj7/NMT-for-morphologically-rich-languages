@@ -1,17 +1,76 @@
-\section{Related Works}
-Pioneering works in NMT like \cite{sutskever2014sequence} and \cite{bahdanau2014neural} observed that sentences with rare and unknown words often produced poor translations when compared to sentences with many frequent words. Although problem of handling unknown and rare words were focused for generating word embedding, it was not addressed in any of the early works in NMT\citep{luong2015addressing}. 
 
-To get vector representations for rare and unknown words,  morphological and orthographic information can be used\citep{botha2014compositional,luong2013better,bhatia2016morphological} while training. Another approach is to get embeddings for characters or character n-grams by breaking down words \citep{bojanowski2016enriching,kim2016character,wieting2016charagram}. This allows us to get words embeddings for any words by convoluting over character embeddings.
+NMT systems typically have a vocabulary size of 30,000 to 80,000 words. Until recently, these models were incapable of translating rare and unknown words \citep{luong2015addressing}. As the vocabulary size of the network grows, the complexity and the number of parameters to tune increases rapidly. Pioneering works in NMT  \citep{sutskever2014sequence,bahdanau2014neural} observe that sentences with rare and unknown words often produced poor translations when compared to sentences with many frequently used words. Since the network has seen these words only a few times, they don't get a vector representation that can capture their semantics and morphology. 
 
-%Since 2013, there have been many techniques proposed for NMT to get good vector representations for rare and unknown words. 
+\cite{luong2013better} note that rare and unknown words are usually morphologically rich in nature in comparison to more frequently occurring words. Although the problem of handling unknown and rare words was focused heavily in the context of generating word representations, it was not addressed in any of the early works in NMT \citep{luong2015addressing}. 
+%In 2015, \citeauthor{sennrich2015neural} proposed a approach to make open-vocabulary translation possible in NMT. They split rare and unknown words as subword units based using Byte Pair Encoding(BPE). 
+In this chapter, we present some of the general techniques for handling rare and unknown words. First, we will discuss how this problem is handled in the context of word embeddings. Then, we will explore NMT specific approaches to handle OOV words.
 
 
-Specific to NMT, \cite{jean2014using} proposed a method based on importance sampling to use very large target vocabulary without increasing the complexity of the NMT system. In their attention based NMT, the attention weights were used to determine the alignment of unknown (\textit{unk}) target words with the source word, usually a rare word, in the translation. Then a dictionary is used to replace the \textit{unk} tokens with the translation of the rare source word.
+\section{Vector representation for OOV words}
 
-\cite{luong2015addressing} proposed a similar model using external aligner instead of using the attention mechanism. An external aligner was used to align words from the source sentence and the generated target sentence. During training, for all the unknown source word, the aligned target word is replaced with a unknown token \textit{unk}. In their copy model, each unknown target word is assigned individual \textit{unk} token based on their source word. The alignment between source words and target words are maintained. In their positional model, a pre-build dictionary is used to replace the unknown source words in the target side based on the alignment. Both these approaches were effective and showed performance comparable or better than the state-of-the-art in English-French and English-German language pairs. \cite{choi2017context} extended the work of \cite{luong2015addressing} to include multiple positional unknown tokens for digits, proper noun and acronym instead of just one \textit{unk} token. 
+Representing words as vectors has a long history in NLP. A good vector representation should capture the syntax and semantics of a word. It should mirror the linguistic relationship between the words in the vector space. Embedding models discussed in  \cite{bengio2003neural}, \cite{collobert2008unified}, \cite{mikolov2013distributed}, \cite{pennington2014glove}, etc., learn word representations in a continuous vector space where semantically similar words occur closer to each other. Use of word representation, learned from these models, have been shown to improve performance across all NLP tasks \citep{kumar2016ask}. These systems are usually trained on a large monolingual corpus with billions of sentences. Then, the learned word embeddings can be used to represent individual words in the downstream tasks like sentiment classification, text summarization, machine translation, etc.
 
-One problem with these dictionary back-off methods is that there is not always 1-1 correspondence between words from different language because of the variance in degree of morphological synthesis between languages. \cite{sennrich2015neural} proposed a system that work on subword unit level instead of word level like the previous models. The words are segmented into subword units using Byte Pair Encoding (BPE) \citep{gage1994new}. BPE is data compression techniques where the most frequency character or character sequences are iteratively replaced with unused bytes. The vocabulary of their NMT system comprises entirely of these subword units of different lengths. They demonstrated that subword models achieve better accuracy in translating rare words. The model was able to generate new words unseen during training time and improved En-De and En-Ru translation over other back-off dictionary models. One of the major contribution of the paper was showing that the NMT systems are capable of achieving open vocabulary translation by modelling sub word units.
 
-Similar to \cite{sennrich2015neural}, \cite{luong2016achieving} presented a open vocabulary NMT system based on word and character embedding models using RNN. Their hybrid model translates at word level and falls back to character components for rare words. The representation for rare words are computed using Recurrent Neural Network working on the character level. Their system is faster and easier to train unlike other NMT systems using character and subword units. They produced state-of-the-art for English-Czech translation on WMT'15 dataset.
+These models work at word level and ignore the internal structure of the words. Only the words that the model has seen in the training data will get a vector representation. To get vector representations for OOV words,  morphological and orthographic information can be used \citep{botha2014compositional,luong2013better,bhatia2016morphological} while training. These models require an external morphological analyzer to segment the word which is not readily available for all languages. \cite{soricut2015unsupervised} proposed an unsupervised, language agnostic method to extract morphological rules and to build a morphological analyzer. In their approach morphological transformations can be captured and used to map OOV words to an in-vocabulary word.
+
+
+An alternate approach is to get embeddings for characters or character n-grams by breaking down words \citep{bojanowski2016enriching,kim2016character,wieting2016charagram}.  This allows us to get word embeddings for any words by convoluting over character embeddings. Among these models, \citeauthor{bojanowski2016enriching} showed that, by incorporating character n-grams their models can outperform other word level or morphology based approaches. They learn representations for character n-grams and represent word as the sum of character n-grams. 
+
+
+For this project, we have used the work of \cite{soricut2015unsupervised} and \cite{bojanowski2016enriching} to represent OOV words. we have implemented and studied the morphological analyzer from \cite{soricut2015unsupervised} on a word similarity task and used the pretrained word representations from \cite{bojanowski2016enriching} for translation task. 
+
+
+%\begin{table*}[]
+%	\centering
+%	
+%	\begin{tabular}{|l|c|c|}
+%		\hline
+%		\multicolumn{1}{|c|}{\textbf{Embeddings}}                                          & \textbf{Method}               & \textbf{\begin{tabular}[c]{@{}c@{}}Spearman Correlation $\rho \\ on Stanford  RW dataset\end{tabular}} \\ \hline
+%		\cite{soricut2015unsupervised}                                                               & Skip Gram + Morphology        & 0.41                                                                                               \\ \hline
+%		\begin{tabular}[c]{@{}l@{}}\cite{bojanowski2016enriching}\end{tabular} & Subword Information Skip Gram & 0.48                                                                                               \\ \hline
+%		\cite{sun2016inside}                                                                   & Context + Morphology          & 0.52                                                                                               \\ \hline
+%		\cite{barkan2017bayesian}                                                                      & Bayesian Skip-Gram            & 0.50                                                                                               \\ \hline
+%		\cite{sanu2017word}                                                                 & FOFE+SVD                      & 0.50                                                                                               \\ \hline
+%	\end{tabular}%
+%	\caption{State of art performance of different models on RW dataset}
+%	\label{my-label}
+%\end{table*}
+
+%To get a good representation for each word the system has to be trained on large dataset of million of sentence.
+
+%Across all NLP tasks it been shown that representing words in a continuous vector space as 
+%These systems are only as good as the data they are trained on. While English represents only 9\% of the world population, 54\% of the digital content is in English.
+%This   These word vector can also be trained on a large monolingual corpus and reused other tasks like machine learning.
+
+%Another disadvantage of improving the vocabulary size, is that  
+
+
+%The focus of this project will on the performance of NMT systems under low resource settings for morphologically rich languages.
+%
+%One of the challenges when using pre-trained word embeddings for any natural language processing (NLP) task is the issue of handling out-of-vocabulary (OOV) words. This problem occurs when a word that was unseen during training time occurs in testing phase during translation.  In this project, I propose and implement an NMT systems based on \cite{bahdanau2014neural} that is able to handle OOV words online during translation. OOV words will be analysed for their morphology and mapped to an in-vocabulary word using the technique from \cite{soricut2015unsupervised}.
+
+
+
+
+\section{Handling OOV words in NMT}
+%Since 2013, there have been many techniques proposed for NMT to get good vector representations for rare and unknown words.
+Unlike Statistical approaches, NMT systems have a fixed vocabulary due to computational complexity of the model. This forces us to handle words outside this fixed vocabulary using some other techniques. Initially, almost all the NMT systems represent all the OOV words using an unknown token \textit{unk}. Later, different approaches were introduced to address this problem. They can be broadly classified into two groups: Dictionary back-off models, and Subword models.
+
+\subsection{Dictionary back-off Models}
+
+\cite{jean2014using} proposed a method based on importance sampling to use a very large target vocabulary without increasing the complexity of the NMT system. In their attention based NMT, the attention weights were used to determine the alignment of unknown (\textit{unk}) target words with the corresponding source word; usually a rare word, in the translation. Then a dictionary is used to replace the \textit{unk} tokens in the target languages with the translation of the rare source word.
+
+\cite{luong2015addressing} proposed a similar model using an external aligner instead of using the attention mechanism. An external aligner was used to align words from the source sentence and the generated target sentence. During training, for all the unknown source words, the aligned target word is replaced with an unknown token \textit{unk}. In their copy attention model, each unknown target word is assigned individual \textit{unk} token based on their source word. The alignments between source words and target words are maintained. In their positional model, a pre-build dictionary is used to replace the unknown source words in the target side, based on the alignment. Both these approaches were effective and showed a better performance than the state-of-the-art in English-French and English-German language pairs. \cite{choi2017context} extended the work of \cite{luong2015addressing} to include multiple positional unknown tokens for digits, proper nouns and acronyms instead of just one \textit{unk} token. 
+
+\subsection{Subword and character Models}
+One problem with these dictionary back-off methods is that there is not always 1-1 correspondence between words from different languages because of the variance in degree of morphological synthesis between languages. 
+
+\cite{luong2016achieving} presented a open vocabulary NMT system based on word and character embedding models using RNN. In their hybrid approach, the network translates at word level and falls back to character components for rare words. The representation for rare words is computed using Recurrent Neural Network working on the character level. Their system is faster and easier to train unlike other NMT systems using purely character representations. They produced state-of-the-art for English-Czech translation on WMT'15 dataset.
+
+\cite{sennrich2015neural} proposed a system that works on subword level instead of word level like the previous models. The words are segmented into subword units using Byte Pair Encoding (BPE) \citep{gage1994new}. BPE is a data compression technique, where the most frequency character or character sequences are iteratively replaced with unused bytes. The vocabulary of their NMT system comprises entirely of these subword units of different lengths. 
+
+They demonstrated that subword models achieve better accuracy in translating rare words. The model was able to generate new unseen words during testing time and improved English-German and English-Russian translation over other back-off dictionary models. One of the major contribution of \citeauthor{sennrich2015neural}'s paper was showing that the NMT systems are capable of achieving open vocabulary translation by modelling sub word units. This technique has been used widely to improve translation quality. 
+
+BPE does not split words based on their morphology. So the morphological information that the network already learned is not used. In the next chapter, we present how this information can be used to improve the quality of machine translation.
 
 
